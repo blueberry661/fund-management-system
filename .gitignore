@@ -1,0 +1,9 @@
+node_modules/
+.npm-cache/
+.edge-profile-funds/
+
+*.log
+.DS_Store
+Thumbs.db
+
+dist-zip/
