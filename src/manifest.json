@@ -1,8 +1,8 @@
-{
+﻿{
   "author": "LiuRabt",
-  "name": "基金管理系统",
-  "description": "实时查看自选基金、持仓收益、估算净值与市场行情。",
-  "version": null,
+  "name": "Fund Manager",
+  "description": "Track selected funds, holdings, estimated NAV, and market updates.",
+  "version": "2.5.2",
   "manifest_version": 2,
   "icons": {
     "16": "icons/icon16.png",
@@ -15,7 +15,7 @@
       "19": "icons/icon19.png",
       "38": "icons/icon38.png"
     },
-    "default_title": "基金管理系统",
+    "default_title": "Fund Manager",
     "default_popup": "popup/popup.html"
   },
   "options_page": "options/options.html",
