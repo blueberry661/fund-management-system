@@ -26,6 +26,9 @@ const TEXT = {
   navPrefix: "\u51c0\u503c",
   costPrefix: "\u6210\u672c",
   lastRefreshPrefix: "\u4e0a\u6b21\u5237\u65b0\uff1a",
+  estimateTimePrefix: "\u4f30\u503c\u65f6\u95f4",
+  finalNavPrefix: "\u6700\u65b0\u51c0\u503c",
+  previousNavPrefix: "\u4e0a\u4e00\u4ea4\u6613\u65e5\u51c0\u503c",
 };
 
 const state = {
@@ -124,13 +127,16 @@ function mergeFund(fund) {
   const quote = state.quotes[fund.code] || {};
   const nav = toNumber(quote.nav);
   const estimate = toNumber(quote.gsz, NaN);
-  const valuationPrice = Number.isFinite(estimate) && estimate > 0 ? estimate : nav;
+  const hasEstimate = Boolean(quote.hasEstimate) && Number.isFinite(estimate) && estimate > 0;
+  const valuationPrice = hasEstimate ? estimate : nav;
   const amount = valuationPrice * fund.num;
   const dailyRate = toNumber(quote.dailyRate);
   const previousNav = toNumber(quote.prevNav, nav);
   const dailyProfit = fund.num && previousNav ? (valuationPrice - previousNav) * fund.num : 0;
   const holdingProfit = fund.num && fund.cost ? (valuationPrice - fund.cost) * fund.num : 0;
   const holdingRate = fund.num && fund.cost ? (holdingProfit / (fund.cost * fund.num)) * 100 : 0;
+  const previousAmount = previousNav * fund.num;
+  const costAmount = fund.cost * fund.num;
 
   return {
     ...fund,
@@ -141,6 +147,12 @@ function mergeFund(fund) {
     dailyProfit,
     holdingProfit,
     holdingRate,
+    previousAmount,
+    costAmount,
+    hasEstimate,
+    estimateTime: quote.estimateTime || "",
+    tradeDate: quote.tradeDate || "",
+    previousDate: quote.previousDate || "",
     latestDate: quote.latestDate || "",
   };
 }
@@ -153,8 +165,10 @@ function updateSummary(mergedFunds) {
   const totalAmount = mergedFunds.reduce((sum, item) => sum + item.amount, 0);
   const dailyProfit = mergedFunds.reduce((sum, item) => sum + item.dailyProfit, 0);
   const holdingProfit = mergedFunds.reduce((sum, item) => sum + item.holdingProfit, 0);
-  const dailyRate = totalAmount ? (dailyProfit / totalAmount) * 100 : 0;
-  const holdingRate = totalAmount ? (holdingProfit / totalAmount) * 100 : 0;
+  const totalPreviousAmount = mergedFunds.reduce((sum, item) => sum + item.previousAmount, 0);
+  const totalCostAmount = mergedFunds.reduce((sum, item) => sum + item.costAmount, 0);
+  const dailyRate = totalPreviousAmount ? (dailyProfit / totalPreviousAmount) * 100 : 0;
+  const holdingRate = totalCostAmount ? (holdingProfit / totalCostAmount) * 100 : 0;
 
   nodes.totalAmount.textContent = formatMoney(totalAmount);
   nodes.dailyProfit.textContent = formatSignedMoney(dailyProfit);
@@ -178,7 +192,10 @@ function renderTable() {
   }
 
   const latestDate = mergedFunds.map((item) => item.latestDate).filter(Boolean).sort().slice(-1)[0] || TEXT.today;
-  nodes.quoteDateHint.textContent = `${TEXT.latestDatePrefix}${latestDate}`;
+  const estimateTime = mergedFunds.map((item) => item.estimateTime).filter(Boolean).sort().slice(-1)[0] || "";
+  nodes.quoteDateHint.textContent = estimateTime
+    ? `${TEXT.latestDatePrefix}${latestDate} · ${TEXT.estimateTimePrefix} ${estimateTime.slice(11, 16)}`
+    : `${TEXT.latestDatePrefix}${latestDate}`;
 
   nodes.fundTableBody.innerHTML = mergedFunds.map((item) => `
     <tr>
@@ -189,7 +206,7 @@ function renderTable() {
       <td class="mono">${item.code}</td>
       <td>
         <span>${formatNav(item.valuationPrice)}</span>
-        <span class="subtext">${TEXT.navPrefix} ${formatNav(item.nav)}</span>
+        <span class="subtext">${item.hasEstimate ? `${TEXT.finalNavPrefix} ${formatNav(item.nav)}` : `${TEXT.navPrefix} ${formatNav(item.nav)}`}</span>
       </td>
       <td class="${classForValue(item.dailyRate)}">${formatPercent(item.dailyRate)}</td>
       <td class="${classForValue(item.dailyProfit)}">${formatSignedMoney(item.dailyProfit)}</td>
@@ -199,7 +216,7 @@ function renderTable() {
       </td>
       <td>
         <span>${formatMoney(item.amount)}</span>
-        <span class="subtext">${TEXT.costPrefix} ${state.hideAmount ? "******" : item.cost.toFixed(4)}</span>
+        <span class="subtext">${TEXT.previousNavPrefix} ${formatNav(item.previousNav)}</span>
       </td>
     </tr>
   `).join("");
