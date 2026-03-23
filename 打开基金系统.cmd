@@ -3,7 +3,7 @@ setlocal
 
 set "EDGE_1=C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 set "EDGE_2=C:\Program Files\Microsoft\Edge\Application\msedge.exe"
-set "EXT_DIR=C:\Users\Lang\Desktop\Fund Management System\dist"
+set "EXT_DIR=%~dp0dist"
 set "PROFILE_DIR=C:\Users\Lang\.edge-profile-funds"
 set "EDGE_EXE="
 
