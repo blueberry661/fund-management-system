@@ -1,36 +1,112 @@
-# Fund Management Dashboard
+# 基金控盘
 
-This project now supports a local web dashboard as the default experience.
+一个面向个人持仓管理的本地基金面板。
 
-## Quick Start
+它把持仓概览、当日估值、累计收益、图片识别导入和手动新增持仓放到同一个网页工作台里，适合日常快速查看和维护自己的基金列表。
 
-1. Run `start-fund-web.cmd`
-2. The local server starts on `http://127.0.0.1:8765/`
-3. Your browser opens the dashboard automatically
+## 现在能做什么
 
-## Main Scripts
+- 本地网页面板查看基金持仓
+- 自动刷新基金估值、净值和收益
+- 手动新增持仓
+- 图片识别导入持仓截图
+- 导入和导出持仓 JSON
+- 隐藏金额，方便截图
+- 切换数据源
+  - 自动优选
+  - 东方财富
+  - 备源
 
-- `start-fund-web.cmd`: starts the local web dashboard
-- `stop-fund-web.cmd`: stops the local web server on port `8765`
-- `start-fund-extension.cmd`: keeps the old Edge extension mode available
-- `打开基金系统.cmd`: Chinese shortcut that forwards to `start-fund-web.cmd`
+## 快速开始
 
-## Web Dashboard Features
+1. 运行 `start-fund-web.cmd`
+2. 浏览器会自动打开 `http://127.0.0.1:8765/`
+3. 在页面里维护持仓、刷新数据或切换数据源
 
-- fund holdings overview
-- real-time quote refresh through a local proxy
-- daily profit and holding profit summary
-- local holdings editor with browser storage
-- privacy toggle for hiding money amounts
+停止本地服务：
 
-## Project Structure
+- `stop-fund-web.cmd`
 
-- `web/`: local web UI
-- `scripts/fund_web_server.py`: local HTTP server and quote proxy
-- `src/`: original extension source
-- `dist/`: built extension output
+## 常用入口
 
-## Notes
+- `start-fund-web.cmd`
+  - 启动本地网页版本
+- `stop-fund-web.cmd`
+  - 停止本地网页服务
+- `打开基金系统.cmd`
+  - 中文快捷入口，默认转到网页版本
+- `start-fund-extension.cmd`
+  - 保留旧扩展模式，主要用于兼容
 
-- The web version is now the recommended way to use the project.
-- The extension mode is kept only for compatibility.
+## 页面功能说明
+
+### 1. 持仓概览
+
+顶部会显示：
+
+- 总资产
+- 当日收益
+- 持有收益
+
+这些数据会根据当前持仓和最新有效估值或净值自动计算。
+
+### 2. 持仓表现
+
+表格中会显示：
+
+- 基金名称和当前持仓金额
+- 当日估值
+- 按实际净值日计算的净值收益
+- 持有收益
+- 估值与净值
+- 更新状态
+
+### 3. 数据源切换
+
+页面右上角可以切换数据源：
+
+- `自动优选`
+  - 推荐模式，优先使用当前更稳的组合逻辑
+- `东方财富`
+  - 固定按东方财富主源数据取数
+- `备源`
+  - 固定按备源官方净值逻辑取数
+
+切换后页面会自动刷新。
+
+### 4. 新增持仓
+
+支持两种录入方式：
+
+- 按金额录入
+- 按份额录入
+
+输入基金代码后，系统会自动尝试校验名称和最新估值，再换算成系统内部使用的份额和成本。
+
+### 5. 图片识别导入
+
+支持上传或拖拽持仓截图：
+
+- 自动识别基金代码
+- 自动识别持仓金额和持有收益
+- 导入前可手动校对
+
+## 项目结构
+
+- `web/`
+  - 网页前端界面
+- `scripts/fund_web_server.py`
+  - 本地 HTTP 服务和行情代理
+- `data/source_config.json`
+  - 当前数据源配置
+- `src/`
+  - 旧扩展源码
+- `dist/`
+  - 旧扩展构建产物
+
+## 说明
+
+- 当前推荐使用网页版本
+- 扩展模式仅保留兼容，不再作为默认入口
+- 持仓数据默认保存在浏览器本地存储中
+
