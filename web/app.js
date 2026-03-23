@@ -141,6 +141,7 @@ function mergeFund(fund) {
   return {
     ...fund,
     nav,
+    previousNav,
     valuationPrice,
     amount,
     dailyRate,
