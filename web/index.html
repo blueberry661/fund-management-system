@@ -7,95 +7,116 @@
   <link rel="stylesheet" href="/web/styles.css">
 </head>
 <body>
-  <div class="background-grid" aria-hidden="true"></div>
-  <main class="app-shell">
-    <section class="hero-panel">
+  <div class="page-wash" aria-hidden="true"></div>
+  <div class="page-orb orb-left" aria-hidden="true"></div>
+  <div class="page-orb orb-right" aria-hidden="true"></div>
+
+  <main class="site-shell">
+    <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Fund Dashboard</p>
-        <h1>&#22522;&#37329;&#31649;&#29702;&#38754;&#26495;</h1>
-        <p class="hero-text">
-          &#26412;&#22320;&#32593;&#39029;&#29256;&#26412;&#65292;&#30452;&#25509;&#26597;&#30475;&#22522;&#37329;&#20272;&#20540;&#12289;&#24403;&#26085;&#25910;&#30410;&#21644;&#25345;&#26377;&#25910;&#30410;&#65292;&#19981;&#20877;&#20381;&#36182;&#27983;&#35272;&#22120;&#25193;&#23637;&#27169;&#24335;&#12290;
+        <p class="hero-kicker">Portfolio Style Fund Tracker</p>
+        <h1>&#22522;&#37329;&#25511;&#30424;<br>&#21487;&#20197;&#20687;&#20316;&#21697;&#38598;&#19968;&#26679;&#30475;</h1>
+        <p class="hero-description">
+          &#25226;&#22522;&#37329;&#25345;&#20179;&#12289;&#24403;&#26085;&#20272;&#20540;&#12289;&#32047;&#35745;&#25910;&#30410;&#21644;&#20272;&#20540;&#26102;&#38388;&#25972;&#29702;&#21040;&#19968;&#20010;&#36731;&#37327;&#12289;&#39640;&#32423;&#12289;&#30452;&#35266;&#30340;&#26412;&#22320;&#39029;&#38754;&#37324;&#12290;
         </p>
         <div class="hero-actions">
           <button id="refreshBtn" class="primary-btn">&#21047;&#26032;&#23454;&#26102;&#25968;&#25454;</button>
-          <button id="toggleEditorBtn" class="secondary-btn">&#32534;&#36753;&#25345;&#20179;</button>
+          <button id="toggleEditorBtn" class="ghost-btn">&#32534;&#36753;&#25345;&#20179;</button>
         </div>
       </div>
-      <div class="hero-status">
-        <div class="status-card glass">
-          <span class="status-label">&#36830;&#25509;&#29366;&#24577;</span>
+
+      <aside class="hero-side">
+        <div class="hero-status-card card-surface">
+          <span class="mini-label">&#36830;&#25509;&#29366;&#24577;</span>
           <strong id="connectionStatus">&#20934;&#22791;&#20013;</strong>
-          <small id="lastUpdated">&#31561;&#24453;&#39318;&#27425;&#21047;&#26032;</small>
+          <p id="lastUpdated">&#31561;&#24453;&#39318;&#27425;&#21047;&#26032;</p>
         </div>
-      </div>
+        <div class="hero-note card-surface soft-note">
+          <span class="mini-label">&#39029;&#38754;&#35828;&#26126;</span>
+          <p>&#25968;&#25454;&#26469;&#33258;&#23448;&#26041;&#22522;&#37329;&#20272;&#20540;&#19982;&#21382;&#21490;&#20928;&#20540;&#25509;&#21475;&#65292;&#20272;&#20540;&#12289;&#26152;&#26085;&#20928;&#20540;&#21644;&#25910;&#30410;&#29575;&#25353;&#27491;&#30830;&#21475;&#24452;&#35745;&#31639;&#12290;</p>
+        </div>
+      </aside>
     </section>
 
-    <section class="summary-grid">
-      <article class="summary-card warm">
-        <span>&#24635;&#36164;&#20135;</span>
+    <section class="feature-grid">
+      <article class="metric-card metric-primary">
+        <span class="mini-label">&#24635;&#36164;&#20135;</span>
         <strong id="totalAmount">--</strong>
-        <small>&#25353;&#26368;&#26032;&#20272;&#20540;&#35745;&#31639;</small>
+        <small>&#25353;&#26368;&#26032;&#26377;&#25928;&#20272;&#20540;&#35745;&#31639;</small>
       </article>
-      <article class="summary-card cool">
-        <span>&#24403;&#26085;&#25910;&#30410;</span>
+      <article class="metric-card metric-secondary">
+        <span class="mini-label">&#24403;&#26085;&#25910;&#30410;</span>
         <strong id="dailyProfit">--</strong>
         <small id="dailyRate">--</small>
       </article>
-      <article class="summary-card neutral">
-        <span>&#25345;&#26377;&#25910;&#30410;</span>
+      <article class="metric-card metric-plain">
+        <span class="mini-label">&#25345;&#26377;&#25910;&#30410;</span>
         <strong id="holdingProfit">--</strong>
         <small id="holdingRate">--</small>
       </article>
     </section>
 
-    <section class="panel table-panel">
-      <div class="panel-head">
-        <div>
-          <h2>&#25345;&#20179;&#27010;&#35272;</h2>
-          <p id="quoteDateHint">&#27491;&#22312;&#35835;&#21462;&#25968;&#25454;</p>
-        </div>
-        <div class="panel-tools">
-          <label class="switch">
+    <section class="content-grid">
+      <section class="overview-panel card-surface">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">&#25345;&#20179;&#21015;&#34920;</p>
+            <h2>&#20687;&#20316;&#21697;&#38598;&#19968;&#26679;&#30475;&#22522;&#37329;&#34920;&#29616;</h2>
+            <p id="quoteDateHint" class="section-copy">&#27491;&#22312;&#35835;&#21462;&#25968;&#25454;</p>
+          </div>
+          <label class="toggle-chip">
             <input id="privacyToggle" type="checkbox">
             <span>&#38544;&#34255;&#37329;&#39069;</span>
           </label>
         </div>
-      </div>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>&#22522;&#37329;</th>
-              <th>&#20195;&#30721;</th>
-              <th>&#20272;&#31639;&#20928;&#20540;</th>
-              <th>&#24403;&#26085;&#28072;&#24133;</th>
-              <th>&#24403;&#26085;&#25910;&#30410;</th>
-              <th>&#25345;&#26377;&#25910;&#30410;</th>
-              <th>&#25345;&#26377;&#37329;&#39069;</th>
-            </tr>
-          </thead>
-          <tbody id="fundTableBody">
-            <tr>
-              <td colspan="7" class="empty-row">&#27491;&#22312;&#20934;&#22791;&#25968;&#25454;...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="panel editor-panel" id="editorPanel" hidden>
-      <div class="panel-head">
-        <div>
-          <h2>&#32534;&#36753;&#25345;&#20179;</h2>
-          <p>&#25903;&#25345;&#26032;&#22686;&#12289;&#20462;&#25913;&#21644;&#21024;&#38500;&#65292;&#20445;&#23384;&#21518;&#20250;&#33258;&#21160;&#21047;&#26032;&#12290;</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>&#22522;&#37329;</th>
+                <th>&#20195;&#30721;</th>
+                <th>&#20272;&#20540;&#19982;&#20928;&#20540;</th>
+                <th>&#24403;&#26085;&#28072;&#24133;</th>
+                <th>&#24403;&#26085;&#25910;&#30410;</th>
+                <th>&#25345;&#26377;&#25910;&#30410;</th>
+                <th>&#25345;&#20179;&#21442;&#32771;</th>
+              </tr>
+            </thead>
+            <tbody id="fundTableBody">
+              <tr>
+                <td colspan="7" class="empty-row">&#27491;&#22312;&#20934;&#22791;&#25968;&#25454;...</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </div>
-      <div id="editorRows" class="editor-rows"></div>
-      <div class="editor-actions">
-        <button id="addRowBtn" class="secondary-btn">&#26032;&#22686;&#19968;&#34892;</button>
-        <button id="saveBtn" class="primary-btn">&#20445;&#23384;&#24182;&#21047;&#26032;</button>
-      </div>
+      </section>
+
+      <aside class="sidebar-stack">
+        <section class="insight-panel card-surface">
+          <p class="section-kicker">&#20351;&#29992;&#25552;&#31034;</p>
+          <h3>&#39029;&#38754;&#35835;&#27861;</h3>
+          <ul class="info-list">
+            <li>&#20272;&#20540;&#23384;&#22312;&#26102;&#65292;&#24403;&#26085;&#25910;&#30410;&#25353;&#23454;&#26102;&#20272;&#20540;&#21475;&#24452;&#35745;&#31639;</li>
+            <li>&#25345;&#26377;&#25910;&#30410;&#29575;&#25353;&#24635;&#25104;&#26412;&#35745;&#31639;&#65292;&#19981;&#20250;&#34987;&#24403;&#21069;&#24635;&#36164;&#20135;&#31232;&#37322;</li>
+            <li>&#21487;&#20197;&#30452;&#25509;&#22312;&#26412;&#22320;&#39029;&#38754;&#32534;&#36753;&#22522;&#37329;&#20195;&#30721;&#12289;&#20221;&#39069;&#21644;&#25104;&#26412;</li>
+          </ul>
+        </section>
+
+        <section class="editor-panel card-surface" id="editorPanel" hidden>
+          <div class="section-head compact">
+            <div>
+              <p class="section-kicker">&#25345;&#20179;&#32534;&#36753;</p>
+              <h3>&#32500;&#25252;&#20320;&#30340;&#22522;&#37329;&#28165;&#21333;</h3>
+            </div>
+          </div>
+          <div id="editorRows" class="editor-rows"></div>
+          <div class="editor-actions">
+            <button id="addRowBtn" class="ghost-btn">&#26032;&#22686;&#19968;&#34892;</button>
+            <button id="saveBtn" class="primary-btn">&#20445;&#23384;&#24182;&#21047;&#26032;</button>
+          </div>
+        </section>
+      </aside>
     </section>
   </main>
 
