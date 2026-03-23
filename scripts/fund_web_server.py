@@ -18,6 +18,8 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 USER_AGENT = "Mozilla/5.0"
 QUOTE_CACHE: dict[str, dict[str, object]] = {}
+SOURCE_CONFIG_PATH = ROOT / "data" / "source_config.json"
+SOURCE_MODES = {"auto", "eastmoney", "dayfund"}
 
 
 def to_float(value: str | int | float | None, default: float = 0.0) -> float:
@@ -64,6 +66,33 @@ def http_text(url: str, retries: int = 2) -> str:
     raise urllib.error.URLError(str(last_error or "request failed"))
 
 
+def ensure_parent_dir(path: pathlib.Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+
+def normalize_source_mode(value: str | None) -> str:
+    mode = str(value or "auto").strip().lower()
+    return mode if mode in SOURCE_MODES else "auto"
+
+
+def load_source_mode() -> str:
+    try:
+        payload = json.loads(SOURCE_CONFIG_PATH.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return "auto"
+    return normalize_source_mode(payload.get("mode"))
+
+
+def save_source_mode(mode: str) -> str:
+    normalized = normalize_source_mode(mode)
+    ensure_parent_dir(SOURCE_CONFIG_PATH)
+    SOURCE_CONFIG_PATH.write_text(
+        json.dumps({"mode": normalized}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    return normalized
+
+
 def parse_jsonp_payload(text: str) -> dict[str, object]:
     start = text.find("(")
     end = text.rfind(")")
@@ -82,6 +111,33 @@ def parse_js_array(text: str, name: str) -> list[dict[str, object]] | None:
     if not match:
         return None
     return json.loads(match.group(1))
+
+
+def parse_html_id(text: str, element_id: str) -> str:
+    match = re.search(rf'id="{re.escape(element_id)}">(.*?)<', text, re.S)
+    return match.group(1).strip() if match else ""
+
+
+def parse_yyyy_mm_dd(value: str | None) -> str:
+    if not value:
+        return ""
+    text = str(value).strip()[:10]
+    for pattern in ("%Y-%m-%d", "%Y/%m/%d"):
+        try:
+            return datetime.strptime(text, pattern).strftime("%Y-%m-%d")
+        except ValueError:
+            continue
+    return ""
+
+
+def is_newer_date(candidate: str, baseline: str) -> bool:
+    candidate_norm = parse_yyyy_mm_dd(candidate)
+    baseline_norm = parse_yyyy_mm_dd(baseline)
+    if not candidate_norm:
+        return False
+    if not baseline_norm:
+        return True
+    return candidate_norm > baseline_norm
 
 
 def fetch_single_quote(code: str) -> dict[str, object]:
@@ -124,28 +180,99 @@ def fetch_history_snapshot(code: str) -> dict[str, object]:
     if not valid_points:
         raise urllib.error.URLError("history trend unavailable")
 
-    latest = valid_points[-1]
-    previous = valid_points[-2] if len(valid_points) > 1 else latest
+    dated_points = []
+    for point in valid_points:
+        point_ts = int(to_float(point.get("x"), 0))
+        point_date = datetime.fromtimestamp(point_ts / 1000).strftime("%Y-%m-%d") if point_ts else ""
+        dated_points.append(
+            {
+                "date": point_date,
+                "nav": to_float(point.get("y"), 0.0),
+                "equityReturn": to_float(point.get("equityReturn"), 0.0),
+            }
+        )
 
-    latest_ts = int(to_float(latest.get("x"), 0))
-    previous_ts = int(to_float(previous.get("x"), 0))
+    latest = dated_points[-1]
+    previous = dated_points[-2] if len(dated_points) > 1 else latest
 
     return {
         "name": parse_js_var(text, "fS_name") or "",
-        "latestNav": to_float(latest.get("y"), 0.0),
-        "previousNav": to_float(previous.get("y"), 0.0),
-        "latestDate": datetime.fromtimestamp(latest_ts / 1000).strftime("%Y-%m-%d") if latest_ts else "",
-        "previousDate": datetime.fromtimestamp(previous_ts / 1000).strftime("%Y-%m-%d") if previous_ts else "",
+        "latestNav": latest["nav"],
+        "previousNav": previous["nav"],
+        "latestDate": latest["date"],
+        "previousDate": previous["date"],
+        "latestEquityReturn": latest["equityReturn"],
     }
 
 
-def build_quote(code: str) -> dict[str, object]:
+def fetch_dayfund_snapshot(code: str) -> dict[str, object]:
+    url = f"https://www.dayfund.com.cn/fund/{urllib.parse.quote(code)}.html"
+    text = http_text(url)
+    official_date = parse_yyyy_mm_dd(parse_html_id(text, "the_date"))
+    nav = to_float(parse_html_id(text, "this_netvalue"), 0.0)
+    previous_nav = to_float(parse_html_id(text, "last_netvalue"), 0.0)
+    nav_change_rate = to_float(parse_html_id(text, "add_rate").replace("%", ""), 0.0)
+    if not official_date or nav <= 0:
+        raise urllib.error.URLError("dayfund official snapshot unavailable")
+    return {
+        "officialDate": official_date,
+        "nav": nav,
+        "previousNav": previous_nav,
+        "navChangeRate": nav_change_rate,
+    }
+
+
+def apply_official_snapshot(
+    history_data: dict[str, object],
+    official_date: str,
+    nav: float,
+    previous_nav: float,
+    nav_change_rate: float,
+) -> dict[str, object]:
+    snapshot = dict(history_data)
+    snapshot["latestDate"] = official_date or str(history_data.get("latestDate", ""))
+    snapshot["latestNav"] = nav if nav > 0 else to_float(history_data.get("latestNav"), 0.0)
+    snapshot["previousNav"] = previous_nav if previous_nav > 0 else to_float(history_data.get("previousNav"), 0.0)
+    snapshot["latestEquityReturn"] = nav_change_rate
+    return snapshot
+
+
+def build_quote(code: str, source_mode: str = "auto") -> dict[str, object]:
+    source_mode = normalize_source_mode(source_mode)
     quote_data = fetch_single_quote(code)
     history_data = fetch_history_snapshot(code)
+    source_used = "eastmoney"
+    try:
+        dayfund_data = fetch_dayfund_snapshot(code)
+    except Exception:  # noqa: BLE001
+        dayfund_data = {}
 
-    nav = to_float(quote_data.get("nav"), to_float(history_data.get("latestNav"), 0.0))
+    if source_mode == "dayfund" and dayfund_data:
+        history_data = apply_official_snapshot(
+            history_data,
+            str(dayfund_data.get("officialDate", "")),
+            to_float(dayfund_data.get("nav"), 0.0),
+            to_float(dayfund_data.get("previousNav"), 0.0),
+            to_float(dayfund_data.get("navChangeRate"), to_float(history_data.get("latestEquityReturn"), 0.0)),
+        )
+        source_used = "dayfund"
+    elif (
+        source_mode == "auto"
+        and dayfund_data
+        and is_newer_date(str(dayfund_data.get("officialDate", "")), str(history_data.get("latestDate", "")))
+    ):
+        history_data = apply_official_snapshot(
+            history_data,
+            str(dayfund_data.get("officialDate", "")),
+            to_float(dayfund_data.get("nav"), 0.0),
+            to_float(dayfund_data.get("previousNav"), 0.0),
+            to_float(dayfund_data.get("navChangeRate"), to_float(history_data.get("latestEquityReturn"), 0.0)),
+        )
+        source_used = "dayfund"
+
+    nav = to_float(history_data.get("latestNav"), to_float(quote_data.get("nav"), 0.0))
     if nav <= 0:
-        nav = to_float(history_data.get("latestNav"), 0.0)
+        nav = to_float(quote_data.get("nav"), 0.0)
 
     prev_nav = to_float(history_data.get("previousNav"), 0.0)
     if prev_nav <= 0 and nav > 0:
@@ -175,20 +302,25 @@ def build_quote(code: str) -> dict[str, object]:
         "navChangeRate": nav_change_rate,
         "estimateRate": to_float(quote_data.get("estimateRate"), nav_change_rate),
         "tradeDate": format_mmdd(str(quote_data.get("tradeDate", ""))),
+        "estimateDate": format_mmdd(str(quote_data.get("estimateTime", ""))[:10]),
+        "officialDate": format_mmdd(str(history_data.get("latestDate", ""))),
         "latestDate": format_mmdd(
             str(quote_data.get("estimateTime", ""))[:10] or str(history_data.get("latestDate", ""))
         ),
         "previousDate": format_mmdd(str(history_data.get("previousDate", ""))),
         "estimateTime": str(quote_data.get("estimateTime", "")),
         "hasEstimate": has_estimate,
+        "sourceMode": source_mode,
+        "sourceUsed": source_used,
     }
 
 
-def fetch_quotes(codes: list[str]) -> dict[str, dict[str, object]]:
+def fetch_quotes(codes: list[str], source_mode: str | None = None) -> dict[str, dict[str, object]]:
+    effective_mode = normalize_source_mode(source_mode or load_source_mode())
     quotes: dict[str, dict[str, object]] = {}
     errors: dict[str, str] = {}
     with ThreadPoolExecutor(max_workers=min(8, max(1, len(codes)))) as executor:
-        future_map = {executor.submit(build_quote, code): code for code in codes}
+        future_map = {executor.submit(build_quote, code, effective_mode): code for code in codes}
         for future in as_completed(future_map):
             code = future_map[future]
             try:
@@ -223,17 +355,26 @@ class FundHandler(SimpleHTTPRequestHandler):
 
         if parsed.path == "/api/quotes":
             return self.handle_quotes(parsed.query)
+        if parsed.path == "/api/source-config":
+            return self.handle_source_config_get()
 
         return super().do_GET()
+
+    def do_POST(self) -> None:
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == "/api/source-config":
+            return self.handle_source_config_post()
+        return self.send_error(HTTPStatus.NOT_FOUND, "Not Found")
 
     def handle_quotes(self, query: str) -> None:
         params = urllib.parse.parse_qs(query)
         codes = [code.strip() for code in params.get("codes", [""])[0].split(",") if code.strip()]
+        source_mode = normalize_source_mode(params.get("source", [""])[0])
         if not codes:
-            return self.send_json({"quotes": {}, "updated_at": ""})
+            return self.send_json({"quotes": {}, "updated_at": "", "source_mode": source_mode})
 
         try:
-            quotes = fetch_quotes(codes)
+            quotes = fetch_quotes(codes, source_mode)
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, ValueError) as exc:
             return self.send_json(
                 {"error": "upstream_error", "message": str(exc)},
@@ -241,7 +382,31 @@ class FundHandler(SimpleHTTPRequestHandler):
             )
 
         updated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        return self.send_json({"quotes": quotes, "updated_at": updated_at})
+        return self.send_json({"quotes": quotes, "updated_at": updated_at, "source_mode": source_mode})
+
+    def handle_source_config_get(self) -> None:
+        return self.send_json({"mode": load_source_mode(), "modes": sorted(SOURCE_MODES)})
+
+    def handle_source_config_post(self) -> None:
+        length = int(self.headers.get("Content-Length", "0") or 0)
+        raw_body = self.rfile.read(length) if length > 0 else b"{}"
+        try:
+            payload = json.loads(raw_body.decode("utf-8") or "{}")
+        except json.JSONDecodeError:
+            return self.send_json(
+                {"error": "invalid_json", "message": "请求体不是有效 JSON"},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        requested_mode = str(payload.get("mode", "")).strip().lower()
+        if requested_mode not in SOURCE_MODES:
+            return self.send_json(
+                {"error": "invalid_mode", "message": "不支持的数据源模式"},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        mode = save_source_mode(requested_mode)
+        return self.send_json({"mode": mode, "modes": sorted(SOURCE_MODES)})
 
     def log_message(self, format: str, *args) -> None:
         print(f"[{self.log_date_time_string()}] {format % args}")
