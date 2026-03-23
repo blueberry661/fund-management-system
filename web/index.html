@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>&#22522;&#37329;&#31649;&#29702;&#38754;&#26495;</title>
+  <link rel="stylesheet" href="/web/styles.css">
+</head>
+<body>
+  <div class="background-grid" aria-hidden="true"></div>
+  <main class="app-shell">
+    <section class="hero-panel">
+      <div class="hero-copy">
+        <p class="eyebrow">Fund Dashboard</p>
+        <h1>&#22522;&#37329;&#31649;&#29702;&#38754;&#26495;</h1>
+        <p class="hero-text">
+          &#26412;&#22320;&#32593;&#39029;&#29256;&#26412;&#65292;&#30452;&#25509;&#26597;&#30475;&#22522;&#37329;&#20272;&#20540;&#12289;&#24403;&#26085;&#25910;&#30410;&#21644;&#25345;&#26377;&#25910;&#30410;&#65292;&#19981;&#20877;&#20381;&#36182;&#27983;&#35272;&#22120;&#25193;&#23637;&#27169;&#24335;&#12290;
+        </p>
+        <div class="hero-actions">
+          <button id="refreshBtn" class="primary-btn">&#21047;&#26032;&#23454;&#26102;&#25968;&#25454;</button>
+          <button id="toggleEditorBtn" class="secondary-btn">&#32534;&#36753;&#25345;&#20179;</button>
+        </div>
+      </div>
+      <div class="hero-status">
+        <div class="status-card glass">
+          <span class="status-label">&#36830;&#25509;&#29366;&#24577;</span>
+          <strong id="connectionStatus">&#20934;&#22791;&#20013;</strong>
+          <small id="lastUpdated">&#31561;&#24453;&#39318;&#27425;&#21047;&#26032;</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="summary-grid">
+      <article class="summary-card warm">
+        <span>&#24635;&#36164;&#20135;</span>
+        <strong id="totalAmount">--</strong>
+        <small>&#25353;&#26368;&#26032;&#20272;&#20540;&#35745;&#31639;</small>
+      </article>
+      <article class="summary-card cool">
+        <span>&#24403;&#26085;&#25910;&#30410;</span>
+        <strong id="dailyProfit">--</strong>
+        <small id="dailyRate">--</small>
+      </article>
+      <article class="summary-card neutral">
+        <span>&#25345;&#26377;&#25910;&#30410;</span>
+        <strong id="holdingProfit">--</strong>
+        <small id="holdingRate">--</small>
+      </article>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-head">
+        <div>
+          <h2>&#25345;&#20179;&#27010;&#35272;</h2>
+          <p id="quoteDateHint">&#27491;&#22312;&#35835;&#21462;&#25968;&#25454;</p>
+        </div>
+        <div class="panel-tools">
+          <label class="switch">
+            <input id="privacyToggle" type="checkbox">
+            <span>&#38544;&#34255;&#37329;&#39069;</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>&#22522;&#37329;</th>
+              <th>&#20195;&#30721;</th>
+              <th>&#20272;&#31639;&#20928;&#20540;</th>
+              <th>&#24403;&#26085;&#28072;&#24133;</th>
+              <th>&#24403;&#26085;&#25910;&#30410;</th>
+              <th>&#25345;&#26377;&#25910;&#30410;</th>
+              <th>&#25345;&#26377;&#37329;&#39069;</th>
+            </tr>
+          </thead>
+          <tbody id="fundTableBody">
+            <tr>
+              <td colspan="7" class="empty-row">&#27491;&#22312;&#20934;&#22791;&#25968;&#25454;...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel editor-panel" id="editorPanel" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>&#32534;&#36753;&#25345;&#20179;</h2>
+          <p>&#25903;&#25345;&#26032;&#22686;&#12289;&#20462;&#25913;&#21644;&#21024;&#38500;&#65292;&#20445;&#23384;&#21518;&#20250;&#33258;&#21160;&#21047;&#26032;&#12290;</p>
+        </div>
+      </div>
+      <div id="editorRows" class="editor-rows"></div>
+      <div class="editor-actions">
+        <button id="addRowBtn" class="secondary-btn">&#26032;&#22686;&#19968;&#34892;</button>
+        <button id="saveBtn" class="primary-btn">&#20445;&#23384;&#24182;&#21047;&#26032;</button>
+      </div>
+    </section>
+  </main>
+
+  <template id="editorRowTemplate">
+    <div class="editor-row">
+      <input data-field="code" placeholder="6&#20301;&#22522;&#37329;&#20195;&#30721;">
+      <input data-field="name" placeholder="&#22522;&#37329;&#21517;&#31216;">
+      <input data-field="num" type="number" step="0.01" min="0" placeholder="&#25345;&#26377;&#20221;&#39069;">
+      <input data-field="cost" type="number" step="0.0001" min="0" placeholder="&#25345;&#26377;&#25104;&#26412;">
+      <button data-action="remove" class="danger-btn" type="button">&#21024;&#38500;</button>
+    </div>
+  </template>
+
+  <script src="/web/app.js"></script>
+</body>
+</html>

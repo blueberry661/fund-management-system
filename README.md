@@ -1,56 +1,36 @@
-# Fund Management Extension
+# Fund Management Dashboard
 
-基金查看与管理相关的浏览器扩展工作区。
+This project now supports a local web dashboard as the default experience.
 
-## 项目定位
+## Quick Start
 
-这个仓库只保留基金项目本体相关内容，主要用于基金信息查看与扩展功能开发。
+1. Run `start-fund-web.cmd`
+2. The local server starts on `http://127.0.0.1:8765/`
+3. Your browser opens the dashboard automatically
 
-## 主要目录
+## Main Scripts
 
-1. `src/`
-2. `dist/`
-3. `lib/`
-4. `image/`
-5. `docs/`
-6. `funds-master/`
+- `start-fund-web.cmd`: starts the local web dashboard
+- `stop-fund-web.cmd`: stops the local web server on port `8765`
+- `start-fund-extension.cmd`: keeps the old Edge extension mode available
+- `打开基金系统.cmd`: Chinese shortcut that forwards to `start-fund-web.cmd`
 
-## 主要功能
+## Web Dashboard Features
 
-从现有扩展清单和目录结构来看，这个项目主要围绕以下能力：
+- fund holdings overview
+- real-time quote refresh through a local proxy
+- daily profit and holding profit summary
+- local holdings editor with browser storage
+- privacy toggle for hiding money amounts
 
-1. 查看自选基金
-2. 查看持仓收益
-3. 查看估算净值
-4. 查看市场行情
+## Project Structure
 
-## 启动方式
+- `web/`: local web UI
+- `scripts/fund_web_server.py`: local HTTP server and quote proxy
+- `src/`: original extension source
+- `dist/`: built extension output
 
-本地启动入口：
+## Notes
 
-`打开基金系统.cmd`
-
-这个脚本会：
-
-1. 查找本机 Microsoft Edge
-2. 使用独立 Edge 用户目录
-3. 加载当前仓库下的 `dist` 扩展目录
-4. 自动打开扩展管理页
-
-## 目录说明
-
-### `src/`
-
-扩展源码
-
-### `dist/`
-
-已构建的扩展目录
-
-### `docs/`
-
-项目文档
-
-### `funds-master/`
-
-历史资料或参考内容
+- The web version is now the recommended way to use the project.
+- The extension mode is kept only for compatibility.
