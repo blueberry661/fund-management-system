@@ -2,21 +2,22 @@
 
 基金查看与管理相关的浏览器扩展工作区。
 
-## 当前项目定位
+## 项目定位
 
-这个仓库现在只保留基金项目本体，不再混放 WiFi 活动检测工具。
+这个仓库只保留基金项目本体相关内容，主要用于基金信息查看与扩展功能开发。
 
-主要目录包括：
+## 主要目录
 
 1. `src/`
 2. `dist/`
 3. `lib/`
 4. `image/`
-5. `funds-master/`
+5. `docs/`
+6. `funds-master/`
 
 ## 主要功能
 
-从现有扩展清单和目录结构看，这个项目主要围绕以下能力：
+从现有扩展清单和目录结构来看，这个项目主要围绕以下能力：
 
 1. 查看自选基金
 2. 查看持仓收益
@@ -38,20 +39,18 @@
 
 ## 目录说明
 
-1. `src/`
+### `src/`
+
 扩展源码
 
-2. `dist/`
+### `dist/`
+
 已构建的扩展目录
 
-3. `docs/`
+### `docs/`
+
 项目文档
 
-4. `funds-master/`
+### `funds-master/`
+
 历史资料或参考内容
-
-## 备注
-
-之前临时加入过一个 WiFi 活动检测工具，现已拆分为独立项目：
-
-[https://github.com/blueberry661/wifi-activity-detector](https://github.com/blueberry661/wifi-activity-detector)
