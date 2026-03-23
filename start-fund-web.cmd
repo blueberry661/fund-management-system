@@ -2,13 +2,13 @@
 setlocal
 
 set "ROOT=%~dp0"
-set "URL=http://127.0.0.1:8765/"
 
-netstat -ano | findstr ":8765" >nul
+where python >nul 2>&1
 if errorlevel 1 (
-  start "Fund Web Server" cmd /k "cd /d ""%ROOT%"" && python scripts\fund_web_server.py"
-  timeout /t 3 /nobreak >nul
+  echo [ERROR] Python not found. Please install Python 3 first.
+  pause
+  exit /b 1
 )
 
-start "" "%URL%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT%scripts\start_fund_web.ps1"
 exit /b 0

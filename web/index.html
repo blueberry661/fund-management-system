@@ -23,6 +23,7 @@
           <button id="refreshBtn" class="primary-btn">&#21047;&#26032;&#23454;&#26102;&#25968;&#25454;</button>
           <button id="toggleEditorBtn" class="ghost-btn">&#32534;&#36753;&#25345;&#20179;</button>
         </div>
+        <p id="statusMessage" class="status-message" hidden></p>
       </div>
 
       <aside class="hero-side">
@@ -101,6 +102,11 @@
             </div>
           </div>
           <p class="editor-copy">&#27599;&#19968;&#26465;&#35760;&#24405;&#21253;&#21547;&#20195;&#30721;&#12289;&#21517;&#31216;&#12289;&#20221;&#39069;&#21644;&#25104;&#26412;&#65292;&#20445;&#23384;&#21518;&#20250;&#31435;&#21363;&#37325;&#26032;&#35745;&#31639;&#25910;&#30410;&#12290;</p>
+          <div class="editor-toolbar">
+            <button id="exportBtn" class="ghost-btn" type="button">&#23548;&#20986;&#25345;&#20179;</button>
+            <button id="importBtn" class="ghost-btn" type="button">&#23548;&#20837;&#25345;&#20179;</button>
+            <input id="importInput" type="file" accept="application/json" hidden>
+          </div>
           <div id="editorRows" class="editor-rows"></div>
           <div class="editor-actions">
             <button id="addRowBtn" class="ghost-btn">&#26032;&#22686;&#19968;&#34892;</button>

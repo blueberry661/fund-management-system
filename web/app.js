@@ -36,6 +36,7 @@ const state = {
   quotes: {},
   hideAmount: false,
   lastUpdated: "",
+  statusTimer: null,
 };
 
 const nodes = {
@@ -48,15 +49,38 @@ const nodes = {
   holdingRate: document.getElementById("holdingRate"),
   quoteDateHint: document.getElementById("quoteDateHint"),
   fundTableBody: document.getElementById("fundTableBody"),
+  statusMessage: document.getElementById("statusMessage"),
   editorPanel: document.getElementById("editorPanel"),
   editorRows: document.getElementById("editorRows"),
   refreshBtn: document.getElementById("refreshBtn"),
   toggleEditorBtn: document.getElementById("toggleEditorBtn"),
   addRowBtn: document.getElementById("addRowBtn"),
   saveBtn: document.getElementById("saveBtn"),
+  exportBtn: document.getElementById("exportBtn"),
+  importBtn: document.getElementById("importBtn"),
+  importInput: document.getElementById("importInput"),
   privacyToggle: document.getElementById("privacyToggle"),
   editorRowTemplate: document.getElementById("editorRowTemplate"),
 };
+
+function setStatusMessage(message, tone = "info") {
+  if (!nodes.statusMessage) {
+    return;
+  }
+  nodes.statusMessage.hidden = !message;
+  nodes.statusMessage.textContent = message;
+  nodes.statusMessage.dataset.tone = tone;
+  if (state.statusTimer) {
+    clearTimeout(state.statusTimer);
+  }
+  if (message) {
+    state.statusTimer = setTimeout(() => {
+      nodes.statusMessage.hidden = true;
+      nodes.statusMessage.textContent = "";
+      delete nodes.statusMessage.dataset.tone;
+    }, 4000);
+  }
+}
 
 function loadFunds() {
   try {
@@ -258,6 +282,41 @@ function collectEditorRows() {
     .filter((item) => /^\d{6}$/.test(item.code));
 }
 
+function downloadHoldings() {
+  const blob = new Blob([JSON.stringify(state.funds, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "fund-holdings.json";
+  link.click();
+  URL.revokeObjectURL(url);
+  setStatusMessage("\u6301\u4ed3\u5df2\u5bfc\u51fa", "success");
+}
+
+async function importHoldings(file) {
+  if (!file) {
+    return;
+  }
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    const normalized = normalizeFunds(parsed);
+    if (!normalized.length) {
+      throw new Error("empty");
+    }
+    state.funds = normalized;
+    persistFunds();
+    renderEditor();
+    renderTable();
+    await refreshQuotes();
+    setStatusMessage("\u6301\u4ed3\u5df2\u5bfc\u5165\u5e76\u5237\u65b0", "success");
+  } catch {
+    setStatusMessage("\u5bfc\u5165\u5931\u8d25\uff0c\u8bf7\u9009\u62e9\u6b63\u786e\u7684 JSON \u6301\u4ed3\u6587\u4ef6", "error");
+  } finally {
+    nodes.importInput.value = "";
+  }
+}
+
 async function refreshQuotes() {
   if (!state.funds.length) {
     renderTable();
@@ -283,10 +342,15 @@ async function refreshQuotes() {
       ? `${TEXT.lastRefreshPrefix}${state.lastUpdated}`
       : TEXT.refreshed;
     renderTable();
+    const hasStale = Object.values(state.quotes).some((quote) => quote && quote.stale);
+    if (hasStale) {
+      setStatusMessage("\u90e8\u5206\u57fa\u91d1\u6682\u65f6\u4f7f\u7528\u4e0a\u6b21\u6210\u529f\u6570\u636e", "error");
+    }
   } catch (error) {
     console.error(error);
     nodes.connectionStatus.textContent = TEXT.error;
     nodes.lastUpdated.textContent = TEXT.fetchError;
+    setStatusMessage("\u90e8\u5206\u6216\u5168\u90e8\u57fa\u91d1\u6570\u636e\u5237\u65b0\u5931\u8d25", "error");
   }
 }
 
@@ -304,17 +368,31 @@ function bindEvents() {
   nodes.toggleEditorBtn.addEventListener("click", () => {
     const shouldShow = nodes.editorPanel.hidden;
     nodes.editorPanel.hidden = !shouldShow;
+    nodes.toggleEditorBtn.textContent = shouldShow ? "\u6536\u8d77\u7f16\u8f91" : "\u7f16\u8f91\u6301\u4ed3";
     if (shouldShow) {
       renderEditor();
     }
   });
   nodes.addRowBtn.addEventListener("click", () => appendEditorRow());
   nodes.saveBtn.addEventListener("click", async () => {
-    state.funds = normalizeFunds(collectEditorRows());
+    const normalized = normalizeFunds(collectEditorRows());
+    if (!normalized.length) {
+      appendEditorRow();
+      setStatusMessage("\u8bf7\u81f3\u5c11\u4fdd\u7559\u4e00\u6761\u6709\u6548\u7684 6 \u4f4d\u57fa\u91d1\u4ee3\u7801", "error");
+      return;
+    }
+    state.funds = normalized;
     persistFunds();
     renderEditor();
     renderTable();
     await refreshQuotes();
+    setStatusMessage("\u6301\u4ed3\u5df2\u4fdd\u5b58", "success");
+  });
+  nodes.exportBtn.addEventListener("click", downloadHoldings);
+  nodes.importBtn.addEventListener("click", () => nodes.importInput.click());
+  nodes.importInput.addEventListener("change", (event) => {
+    const [file] = event.target.files || [];
+    importHoldings(file);
   });
   nodes.privacyToggle.addEventListener("change", (event) => {
     state.hideAmount = event.target.checked;

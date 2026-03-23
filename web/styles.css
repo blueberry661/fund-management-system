@@ -144,6 +144,28 @@ body {
   flex-wrap: wrap;
 }
 
+.status-message {
+  display: inline-flex;
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1.4;
+  background: rgba(255,255,255,0.76);
+  border: 1px solid rgba(23, 33, 45, 0.08);
+  color: var(--muted);
+}
+
+.status-message[data-tone="success"] {
+  color: var(--positive);
+  background: rgba(223, 244, 238, 0.92);
+}
+
+.status-message[data-tone="error"] {
+  color: var(--negative);
+  background: rgba(255, 241, 237, 0.92);
+}
+
 .hero-side {
   display: grid;
   gap: 18px;
@@ -370,6 +392,13 @@ tbody tr:hover {
 .editor-copy {
   margin-bottom: 16px;
   font-size: 13px;
+}
+
+.editor-toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .editor-rows {

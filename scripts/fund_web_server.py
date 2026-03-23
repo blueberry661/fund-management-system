@@ -17,6 +17,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 USER_AGENT = "Mozilla/5.0"
+QUOTE_CACHE: dict[str, dict[str, object]] = {}
 
 
 def to_float(value: str | int | float | None, default: float = 0.0) -> float:
@@ -185,11 +186,28 @@ def build_quote(code: str) -> dict[str, object]:
 
 def fetch_quotes(codes: list[str]) -> dict[str, dict[str, object]]:
     quotes: dict[str, dict[str, object]] = {}
+    errors: dict[str, str] = {}
     with ThreadPoolExecutor(max_workers=min(8, max(1, len(codes)))) as executor:
         future_map = {executor.submit(build_quote, code): code for code in codes}
         for future in as_completed(future_map):
             code = future_map[future]
-            quotes[code] = future.result()
+            try:
+                quote = future.result()
+                QUOTE_CACHE[code] = quote
+                quotes[code] = quote
+            except Exception as exc:  # noqa: BLE001
+                cached = QUOTE_CACHE.get(code)
+                if cached:
+                    fallback = dict(cached)
+                    fallback["stale"] = True
+                    fallback["error"] = str(exc)
+                    quotes[code] = fallback
+                else:
+                    errors[code] = str(exc)
+
+    if not quotes and errors:
+        raise urllib.error.URLError("; ".join(f"{code}: {message}" for code, message in errors.items()))
+
     return quotes
 
 
